@@ -12,16 +12,30 @@ $container->set('renderer', function() {
 $app = AppFactory::createFromContainer($container);
 $app->addErrorMiddleware(true, true,true);
 
+$users = ['mike', 'mishel', 'adel', 'keks', 'kamila'];
+
 $app->get("/", function ($request, $response) {
     return $response->write('Welcome to Slim');
 });
 
-$app->get("/users", function ($request, $response) {
-    return $response->write('GET /users');
-});
+$app->get('/users', function ($request, $response) use ($users) {
+$term = $request->getQueryParams()['term'];
+$filteredUsers = [];
 
-$app->post('/users', function ($request, $response) {
-    return $response->withStatus(302);
+if ($term !== '') {
+    foreach ($users as $user) {
+        if (str_contains($user, $term)) {
+            $filteredUsers[] = $user;
+        }
+    }
+} else {
+    $filteredUsers = $users;
+}
+
+return $this->get('renderer')->render($response, 'users/index.phtml', [
+    'users' => $filteredUsers,
+    'term' => $term
+]);
 });
 
 $app->get('/courses/{id}', function ($request, $response, array $args) {
